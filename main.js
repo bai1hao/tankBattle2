@@ -12,6 +12,7 @@ function getRandomNum(min, max) {
     return min + Math.round(Math.random() * (max - min))
 }
 const SIZE = 20;
+const TANK_SIZE=14
 class Game {
     constructor() {
         this.player = null;
@@ -152,30 +153,30 @@ class Game {
         for(let i=0;i<count;i++){
             let x = getRandomNum(20,this.width-20)
             let y =  getRandomNum(20,this.height-20)
-            this.enemy.push(new Tank(x,y,'enemy'))
+            this.enemy.push(new Tank(x,y,TANK_SIZE,TANK_SIZE,'red','enemy'))
         }
     }
     makeBullet() {
         let bullet;
         switch (this.player.toward) {
             case 'up':
-                bullet = new Bullet(this.player.x + this.player.width / 2 - 2, this.player.y, 'up')
+                bullet = new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y, 'up')
                 break;
             case 'down':
-                bullet = new Bullet(this.player.x + this.player.width / 2 - 2, this.player.y+this.player.height, 'down')
+                bullet = new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y+this.player.height, 'down')
                 break;
             case 'left':
-                bullet = new Bullet(this.player.x ,this.player.y + this.player.height/2 - 2, 'left')
+                bullet = new Bullet(this.player.x ,this.player.y + this.player.height/2 - 2.5, 'left')
                 break;
             case 'right':
-                bullet = new Bullet(this.player.x+this.player.width,this.player.y + this.player.height/2 - 2, 'right')
+                bullet = new Bullet(this.player.x+this.player.width,this.player.y + this.player.height/2 - 2.5, 'right')
                 break;
         }
         return bullet
     }
     start() {
         this.makeMap()
-        this.player = new Tank(300, 200, 'player')
+        this.player = new Tank(300, 200, TANK_SIZE,TANK_SIZE,'green','player')
         this.createEnemy(3);
         window.onkeydown = e => {
             switch (e.key) {
@@ -256,16 +257,21 @@ class Bullet {
 }
 
 class Tank {
-    constructor(x, y, className) {
+    constructor(x, y, width,height,color,className) {
         this.bullet = []
         this.move = false;
         this.x = x
         this.y = y
-        this.width = 20;
-        this.height = 20;
+        this.width = width;
+        this.height = height;
         this.toward = 'up'
         this.el = document.createElement('div')
         this.el.classList.add(className)
+        this.el.style.width=0
+        this.el.style.height=0
+        this.el.style.borderBottom=`${height}px solid ${color}`
+        this.el.style.borderLeft=`${width/2}px solid transparent`
+        this.el.style.borderRight=`${width/2}px solid transparent`
         this.el.style.left = x + 'px'
         this.el.style.top = y + 'px'
         container.appendChild(this.el)
