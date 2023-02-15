@@ -1,9 +1,10 @@
 let container = document.querySelector('.container')
+let game;
 document.querySelector('button').addEventListener('click', e => {
     document.querySelector('.text').style.display = 'none'
     document.querySelector('.score').style.display = 'unset'
     document.querySelector('.level').style.display = 'unset'
-    let game = new Game()
+    game = new Game()
     game.start();
 })
 
@@ -62,13 +63,7 @@ class Game {
 
         return minRightBorder > maxLeftBorder && minBottomBorder > maxTopBorder
     }
-    collisionWall(role) {
-        this.walls.forEach(e => {
-            return this.isCollision(role, e)
-        })
-    }
     render() {
-        console.log(this.isCollision(this.player,this.walls[0]));
         switch (this.player.toward) {
             case "up":
                 this.player.el.style.rotate = "0deg";
@@ -95,6 +90,24 @@ class Game {
                 }
                 break;
         }
+        this.walls.forEach(e=>{
+            if(this.isCollision(this.player,e)){
+                switch (this.player.toward){
+                    case 'up':
+                        this.player.y++;
+                        break;
+                    case 'down':
+                        this.player.y--;
+                        break;
+                    case 'left':
+                        this.player.x++;
+                        break;
+                    case 'right':
+                        this.player.x--;
+                        break;
+                }
+            }
+        })
         this.player.el.style.left = this.player.x + 'px'
         this.player.el.style.top = this.player.y + 'px'
 
@@ -119,15 +132,18 @@ class Game {
                 e.el.style.left = e.x + 'px'
                 if (!this.borderListen(e)) {
                     e.el.remove();
+                    this.player.bullet.splice(this.player.bullet.indexOf(e),1)
                 }
             })
         }
-        this.walls.forEach(e=>{
-            this.player.bullet.forEach(ev=>{
-                if(this.isCollision(e,ev)){
+        this.walls.forEach(wall=>{
+            this.player.bullet.forEach(bullet=>{
+                if(this.isCollision(wall,bullet)){
                     console.log('test');
-                    e.el.remove();
-                    ev.el.remove();
+                    bullet.el.remove();
+                    this.player.bullet.splice(this.player.bullet.indexOf(bullet),1)
+                    wall.el.remove();
+                    this.walls.splice(this.walls.indexOf(wall),1)
                 }
             })
         })
@@ -210,6 +226,8 @@ class Cell {
     constructor(x, y, tag) {
         this.x = x
         this.y = y
+        this.width = SIZE;
+        this.height = SIZE;
         this.tag = tag
         this.el = document.createElement('div');
         this.el.classList.add('wall')

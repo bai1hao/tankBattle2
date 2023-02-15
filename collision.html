@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>collision detective</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        .block {
+            position: fixed;
+            width:100px;
+            height: 100px;
+            background: antiquewhite;
+        }
+        .box1 {
+            position: fixed;
+            width:40px;
+            height: 60px;
+            background: salmon;
+        }
+    </style>
+</head>
+<body>
+<script>
+    class Role {
+        constructor(x,y,w,h,className) {
+            this.el = document.createElement('div')
+            this.el.classList.add(className)
+            document.querySelector('body').appendChild(this.el)
+            this.el.style.left = x + 'px'
+            this.el.style.top = y + 'px'
+            this.el.style.width = w + 'px';
+            this.el.style.height = h + 'px';
+            this.x = x;
+            this.y = y;
+            this.width = w
+            this.height = h
+        }
+    }
+    let $=e=>document.querySelector(e)
+    let $$=e=>document.querySelectorAll(e)
+    let player = new Role(300,200,40,60,'box1');
+    player.speed = 16
+    let object = []
+    // let ob1 = new Role(200,200,100,100,'block')
+    for(let a= 0;a<2;a++){
+        object.push(new Role(a*200,a*200,100,100,'block'))
+    }
+
+    function isCollision(role1, role2) {
+        let leftBorder1 = role1.x;
+        let leftBorder2 = role2.x;
+        let rightBorder1 = role1.x + role1.width;
+        let rightBorder2 = role2.x + role2.width;
+        let maxLeftBorder = Math.max(leftBorder1, leftBorder2)
+        let minRightBorder = Math.min(rightBorder1, rightBorder2)
+
+        let topBorder1 = role1.y;
+        let topBorder2 = role2.y;
+        let bottomBorder1 = role1.y + role1.height;
+        let bottomBorder2 = role2.y + role2.height;
+        let minBottomBorder = Math.min(bottomBorder1, bottomBorder2)
+        let maxTopBorder = Math.max(topBorder1, topBorder2)
+
+        return minRightBorder > maxLeftBorder && minBottomBorder > maxTopBorder
+    }
+
+    //渲染
+    window.onkeydown=e=>{
+        switch (e.key){
+            case 'ArrowUp':
+                player.y-=player.speed;
+                break;
+            case 'ArrowDown':
+                player.y+=player.speed;
+                break;
+            case 'ArrowLeft':
+                player.x-=player.speed;
+                break;
+            case 'ArrowRight':
+                player.x+=player.speed;
+                break;
+        }
+
+    }
+    function render(){
+        object.forEach(e=>{
+            if(isCollision(player,e)){
+                console.log('撞击');
+            }
+        })
+
+        player.el.style.left = player.x + 'px'
+        player.el.style.top = player.y + 'px'
+    }
+    setInterval(()=>{
+        render();
+    })
+</script>
+</body>
+</html>
