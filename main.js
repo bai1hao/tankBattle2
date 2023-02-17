@@ -1,18 +1,25 @@
-let container = document.querySelector('.container')
+let $=e=>document.querySelector(e);
+let $$=e=>document.querySelectorAll(e);
+let container = $('.container')
 let game;
-document.querySelector('button').addEventListener('click', e => {
-    document.querySelector('.text').style.display = 'none'
-    document.querySelector('.score').style.display = 'unset'
-    document.querySelector('.level').style.display = 'unset'
-    game = new Game()
+
+
+$('.startButton').addEventListener('click', e => {
+    console.log('test')
+    $('.startText').style.display = 'none'
+    $('.score').style.display = 'unset'
+    $('.level').style.display = 'unset'
+    game = new Game('start')
     game.start();
 })
 
 function getRandomNum(min, max) {
     return min + Math.round(Math.random() * (max - min))
 }
+
 const SIZE = 20;
-const TANK_SIZE=14
+const TANK_SIZE = 14
+
 class Game {
     constructor() {
         this.player = null;
@@ -20,6 +27,9 @@ class Game {
         this.width = 600;
         this.height = 400;
         this.enemy = []
+        this.level = 1;
+        this.score = 0;
+        this.interval = null;
     }
 
     makeMap() {
@@ -33,6 +43,7 @@ class Game {
         })
 
     }
+
     borderListen(role) {
         if (role.toward === "up") {
             return role.y > 0
@@ -47,6 +58,7 @@ class Game {
             return role.x + role.width < this.width
         }
     }
+
     isCollision(role1, role2) {
         let leftBorder1 = role1.x;
         let leftBorder2 = role2.x;
@@ -64,7 +76,11 @@ class Game {
 
         return minRightBorder > maxLeftBorder && minBottomBorder > maxTopBorder
     }
+
     render() {
+        //分数
+        $('.score').innerText=this.score;
+        //玩家移动和方向旋转
         switch (this.player.toward) {
             case "up":
                 this.player.el.style.rotate = "0deg";
@@ -91,9 +107,9 @@ class Game {
                 }
                 break;
         }
-        this.walls.forEach(e=>{
-            if(this.isCollision(this.player,e)){
-                switch (this.player.toward){
+        this.walls.forEach(e => {
+            if (this.isCollision(this.player, e)) {
+                switch (this.player.toward) {
                     case 'up':
                         this.player.y++;
                         break;
@@ -117,45 +133,78 @@ class Game {
             this.player.bullet.forEach(e => {
                 switch (e.toward) {
                     case 'up':
-                        e.y-=2;
+                        e.y -= 2;
                         break;
                     case 'down':
-                        e.y+=2;
+                        e.y += 2;
                         break;
                     case 'left':
-                        e.x-=2;
+                        e.x -= 2;
                         break;
                     case 'right':
-                        e.x+=2;
+                        e.x += 2;
                         break;
                 }
                 e.el.style.top = e.y + 'px';
                 e.el.style.left = e.x + 'px'
                 if (!this.borderListen(e)) {
                     e.el.remove();
-                    this.player.bullet.splice(this.player.bullet.indexOf(e),1)
+                    this.player.bullet.splice(this.player.bullet.indexOf(e), 1)
                 }
             })
         }
-        this.walls.forEach(wall=>{
-            this.player.bullet.forEach(bullet=>{
-                if(this.isCollision(wall,bullet)){
-                    console.log('test');
+        this.walls.forEach(wall => {
+            this.player.bullet.forEach(bullet => {
+                if (this.isCollision(wall, bullet)) {
                     bullet.el.remove();
-                    this.player.bullet.splice(this.player.bullet.indexOf(bullet),1)
+                    this.player.bullet.splice(this.player.bullet.indexOf(bullet), 1)
                     wall.el.remove();
-                    this.walls.splice(this.walls.indexOf(wall),1)
+                    this.walls.splice(this.walls.indexOf(wall), 1)
                 }
             })
         })
-    }
-    createEnemy(count){
-        for(let i=0;i<count;i++){
-            let x = getRandomNum(20,this.width-20)
-            let y =  getRandomNum(20,this.height-20)
-            this.enemy.push(new Tank(x,y,TANK_SIZE,TANK_SIZE,'red','enemy'))
+        //击中敌人
+        this.enemy.forEach(enemy =>{
+            this.player.bullet.forEach(bullet=>{
+                if(this.isCollision(enemy,bullet)){
+                    bullet.el.remove();
+                    this.player.bullet.splice(this.player.bullet.indexOf(bullet), 1)
+                    enemy.el.remove();
+                    this.enemy.splice(this.enemy.indexOf(enemy), 1)
+                    this.score+=10;
+                }
+            })
+        })
+        if(this.enemy.length===0){
+            if(this.level===3){//获胜
+                this.clearWorld();
+                console.log('获胜')
+                game = new Game()
+                game.start();
+            }else{
+                this.level++;
+                this.startLevel(this.level)
+            }
         }
     }
+    clearWorld(){
+        clearInterval(this.interval)
+        this.player.el.remove()
+        this.enemy.forEach(e=>{
+            e.el.remove();
+        })
+        this.walls.forEach(e=>{
+            e.el.remove();
+        })
+    }
+    createEnemy(count) {
+        for (let i = 0; i < count; i++) {
+            let x = getRandomNum(20, this.width - 20)
+            let y = getRandomNum(20, this.height - 20)
+            this.enemy.push(new Tank(x, y, TANK_SIZE, TANK_SIZE, 'red', 'enemy'))
+        }
+    }
+
     makeBullet() {
         let bullet;
         switch (this.player.toward) {
@@ -163,36 +212,51 @@ class Game {
                 bullet = new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y, 'up')
                 break;
             case 'down':
-                bullet = new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y+this.player.height, 'down')
+                bullet = new Bullet(this.player.x + this.player.width / 2 - 2.5, this.player.y + this.player.height, 'down')
                 break;
             case 'left':
-                bullet = new Bullet(this.player.x ,this.player.y + this.player.height/2 - 2.5, 'left')
+                bullet = new Bullet(this.player.x, this.player.y + this.player.height / 2 - 2.5, 'left')
                 break;
             case 'right':
-                bullet = new Bullet(this.player.x+this.player.width,this.player.y + this.player.height/2 - 2.5, 'right')
+                bullet = new Bullet(this.player.x + this.player.width, this.player.y + this.player.height / 2 - 2.5, 'right')
                 break;
         }
         return bullet
     }
+
+    startLevel() {
+        if (this.level === 1) {
+            this.createEnemy(3);
+        } else if (this.level === 2) {
+            this.createEnemy(5)
+        } else if(this.level === 3) {
+            this.createEnemy(7);
+        }
+    }
+
     start() {
         this.makeMap()
-        this.player = new Tank(300, 200, TANK_SIZE,TANK_SIZE,'green','player')
-        this.createEnemy(3);
+        this.startLevel(1)
+        this.player = new Tank(300, 200, TANK_SIZE, TANK_SIZE, 'green', 'player')
         window.onkeydown = e => {
             switch (e.key) {
                 case "ArrowUp":
+                case "w":
                     this.player.toward = 'up'
                     this.player.move = true;
                     break;
                 case "ArrowDown":
+                case "s":
                     this.player.toward = 'down'
                     this.player.move = true;
                     break;
                 case "ArrowLeft":
+                case "a":
                     this.player.toward = 'left'
                     this.player.move = true;
                     break;
-                case 'ArrowRight':
+                case "ArrowRight":
+                case "d":
                     this.player.toward = 'right'
                     this.player.move = true;
                     break;
@@ -201,15 +265,19 @@ class Game {
         window.onkeyup = e => {
             switch (e.key) {
                 case "ArrowUp":
+                case "w":
                     this.player.move = false;
                     break;
                 case "ArrowDown":
+                case "s":
                     this.player.move = false;
                     break;
                 case "ArrowLeft":
+                case "a":
                     this.player.move = false;
                     break;
-                case 'ArrowRight':
+                case "ArrowRight":
+                case "d":
                     this.player.move = false;
                     break;
                 case ' ':
@@ -217,7 +285,7 @@ class Game {
                     break;
             }
         }
-        setInterval(() => {
+        this.interval = setInterval(() => {
             this.render()
         })
     }
@@ -229,7 +297,7 @@ class Cell {
         this.y = y
         this.width = SIZE;
         this.height = SIZE;
-        this.tag = tag
+        this.tag = tag;
         this.el = document.createElement('div');
         this.el.classList.add('wall')
         this.el.style.width = SIZE + 'px'
@@ -248,8 +316,8 @@ class Bullet {
         this.height = 5;
         this.toward = toward;
         this.el = document.createElement('div')
-        this.el.style.left = this.x+'px'
-        this.el.style.top = this.y+'px'
+        this.el.style.left = this.x + 'px'
+        this.el.style.top = this.y + 'px'
 
         this.el.classList.add('bullet')
         container.appendChild(this.el)
@@ -257,7 +325,7 @@ class Bullet {
 }
 
 class Tank {
-    constructor(x, y, width,height,color,className) {
+    constructor(x, y, width, height, color, className) {
         this.bullet = []
         this.move = false;
         this.x = x
@@ -267,11 +335,11 @@ class Tank {
         this.toward = 'up'
         this.el = document.createElement('div')
         this.el.classList.add(className)
-        this.el.style.width=0
-        this.el.style.height=0
-        this.el.style.borderBottom=`${height}px solid ${color}`
-        this.el.style.borderLeft=`${width/2}px solid transparent`
-        this.el.style.borderRight=`${width/2}px solid transparent`
+        this.el.style.width = 0
+        this.el.style.height = 0
+        this.el.style.borderBottom = `${height}px solid ${color}`
+        this.el.style.borderLeft = `${width / 2}px solid transparent`
+        this.el.style.borderRight = `${width / 2}px solid transparent`
         this.el.style.left = x + 'px'
         this.el.style.top = y + 'px'
         container.appendChild(this.el)

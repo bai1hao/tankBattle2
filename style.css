@@ -20,11 +20,19 @@ body {
     background: navajowhite;
     box-shadow: 0 0 10px goldenrod;
 }
-.text {
+.startText {
     text-align: center;
     color:darkslategrey;
 }
-.text p {
+.winText {
+    text-align: center;
+    color:darkslategrey;
+    display: none;
+}
+.winText p {
+    margin:20px;
+}
+.startText p {
     margin:10px;
 }
 .score {
