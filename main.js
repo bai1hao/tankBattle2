@@ -5,21 +5,26 @@ let game;
 
 
 $('.startButton').addEventListener('click', e => {
-    console.log('test')
     $('.startText').style.display = 'none'
     $('.score').style.display = 'unset'
-    $('.level').style.display = 'unset'
+    $('.level-text').style.display = 'unset'
     game = new Game('start')
     game.start();
 })
-
+$('.restartButton').addEventListener('click',e=>{
+    $('.winText').style.display = 'none'
+    $('.score').style.display = 'unset'
+    $('.level-text').style.display = 'unset'
+    game = new Game('start')
+    game.start();
+})
 function getRandomNum(min, max) {
     return min + Math.round(Math.random() * (max - min))
 }
 
 const SIZE = 20;
 const TANK_SIZE = 14
-
+const direction = ['up','down','left','right']
 class Game {
     constructor() {
         this.player = null;
@@ -80,6 +85,7 @@ class Game {
     render() {
         //分数
         $('.score').innerText=this.score;
+        $('.level').innerText=this.level;
         //玩家移动和方向旋转
         switch (this.player.toward) {
             case "up":
@@ -107,6 +113,22 @@ class Game {
                 }
                 break;
         }
+        this.enemy.forEach(e=>{
+            switch (e.toward) {
+                case "up":
+                    e.el.style.rotate = "0deg";
+                    break;
+                case "down":
+                    e.el.style.rotate = "180deg";
+                    break;
+                case "left":
+                    e.el.style.rotate = "-90deg";
+                    break;
+                case "right":
+                    e.el.style.rotate = "90deg";
+                    break;
+            }
+        })
         this.walls.forEach(e => {
             if (this.isCollision(this.player, e)) {
                 switch (this.player.toward) {
@@ -177,10 +199,12 @@ class Game {
         })
         if(this.enemy.length===0){
             if(this.level===3){//获胜
+                $('.win-score').innerText = this.score
                 this.clearWorld();
                 console.log('获胜')
-                game = new Game()
-                game.start();
+                $('.winText').style.display='unset'
+                $('.score').style.display = 'none'
+                $('.level-text').style.display='none'
             }else{
                 this.level++;
                 this.startLevel(this.level)
@@ -189,6 +213,13 @@ class Game {
     }
     clearWorld(){
         clearInterval(this.interval)
+        window.onkeydown=null;
+        window.onkeyup=null;
+        console.log('over')
+        this.player.bullet.forEach(e=>{
+            console.log(e)
+            e.el.remove();
+        })
         this.player.el.remove()
         this.enemy.forEach(e=>{
             e.el.remove();
@@ -201,7 +232,8 @@ class Game {
         for (let i = 0; i < count; i++) {
             let x = getRandomNum(20, this.width - 20)
             let y = getRandomNum(20, this.height - 20)
-            this.enemy.push(new Tank(x, y, TANK_SIZE, TANK_SIZE, 'red', 'enemy'))
+            let toward =direction[getRandomNum(0,direction.length-1)]
+            this.enemy.push(new Tank(x, y, TANK_SIZE, TANK_SIZE, 'red', 'enemy',toward))
         }
     }
 
@@ -237,7 +269,7 @@ class Game {
     start() {
         this.makeMap()
         this.startLevel(1)
-        this.player = new Tank(300, 200, TANK_SIZE, TANK_SIZE, 'green', 'player')
+        this.player = new Tank(300, 200, TANK_SIZE, TANK_SIZE, 'green', 'player','up')
         window.onkeydown = e => {
             switch (e.key) {
                 case "ArrowUp":
@@ -325,14 +357,14 @@ class Bullet {
 }
 
 class Tank {
-    constructor(x, y, width, height, color, className) {
+    constructor(x, y, width, height, color, className,toward) {
         this.bullet = []
         this.move = false;
         this.x = x
         this.y = y
         this.width = width;
         this.height = height;
-        this.toward = 'up'
+        this.toward = toward;
         this.el = document.createElement('div')
         this.el.classList.add(className)
         this.el.style.width = 0

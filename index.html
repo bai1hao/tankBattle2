@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <div class="score">0</div>
-        <div class="level">波次1</div>
+        <div class="level-text">波次 <span class="level"></span> </div>
         <div class="startText">
             <h1>坦克大战</h1>
             <p>操作：方向键控制方向，空格发射子弹</p>
@@ -19,9 +19,14 @@
             <button class="startButton">开始游戏</button>
         </div>
         <div class="winText">
-            <h1>游戏胜利</h1>
-            <p class="score"></p>
-            <button class="startButton">重新开始</button>
+            <h1>胜利!</h1>
+            <p>得分：<span class="win-score"></span></p>
+            <button class="restartButton">重新开始</button>
+        </div>
+        <div class="loseText">
+            <h1>点击按钮再来一次</h1>
+            <p>得分：<span class="win-score"></span></p>
+            <button class="restartButton">重新开始</button>
         </div>
     </div>
 

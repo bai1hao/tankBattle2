@@ -29,6 +29,11 @@ body {
     color:darkslategrey;
     display: none;
 }
+.loseText {
+    text-align: center;
+    color:darkslategrey;
+    display: none;
+}
 .winText p {
     margin:20px;
 }
@@ -42,7 +47,7 @@ body {
     display: none;
     color:goldenrod;
 }
-.level {
+.level-text {
     color:goldenrod;
     position:absolute;
     right:10px;
