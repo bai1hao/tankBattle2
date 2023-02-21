@@ -218,13 +218,14 @@ class Game {
                 this.startLevel(this.level)
             }
         }
-        //监控格子是否为空
+        //监控格子上是否有实体
         this.space.forEach(space=>{
-            if(this.isCollision(space,this.player)){
-                space.tag = 3;
+            if(this.isCollision(space,this.player)||this.enemy.filter(enemy=>this.isCollision(enemy,space)).length>0){
+                space.tag=3;
             }else {
-                space.tag = 0;
+                space.tag=0;
             }
+
         })
     }
 
@@ -252,6 +253,7 @@ class Game {
         for (let i = 0; i < count; i++) {
             let cell = this.space.filter(e=>e.tag!==3)[getRandomNum(0,this.space.length-1)]
             cell.tag = 3;
+            console.log(cell)
             let x = cell.x;
             let y = cell.y;
 
