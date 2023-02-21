@@ -1,5 +1,5 @@
-let $=e=>document.querySelector(e);
-let $$=e=>document.querySelectorAll(e);
+let $ = e => document.querySelector(e);
+let $$ = e => document.querySelectorAll(e);
 let container = $('.container')
 let game;
 
@@ -8,23 +8,25 @@ $('.startButton').addEventListener('click', e => {
     $('.startText').style.display = 'none'
     $('.score').style.display = 'unset'
     $('.level-text').style.display = 'unset'
-    game = new Game('start')
+    game = new Game()
     game.start();
 })
-$('.restartButton').addEventListener('click',e=>{
+$('.restartButton').addEventListener('click', e => {
     $('.winText').style.display = 'none'
     $('.score').style.display = 'unset'
     $('.level-text').style.display = 'unset'
-    game = new Game('start')
+    game = new Game()
     game.start();
 })
+
 function getRandomNum(min, max) {
     return min + Math.round(Math.random() * (max - min))
 }
 
 const SIZE = 20;
 const TANK_SIZE = 14
-const direction = ['up','down','left','right']
+const direction = ['up', 'down', 'left', 'right']
+
 class Game {
     constructor() {
         this.player = null;
@@ -35,14 +37,20 @@ class Game {
         this.level = 1;
         this.score = 0;
         this.interval = null;
+        this.space = []
     }
 
     makeMap() {
         let mapIndex = getRandomNum(0, data.length - 1)
+        mapIndex=0;
         data[mapIndex].forEach((row, index1) => {
             row.forEach((tag, index2) => {
                 if (tag === 1) {
-                    this.walls.push(new Cell(index2 * SIZE, index1 * SIZE, tag))
+                    let wall = new Cell(index2 * SIZE, index1 * SIZE, tag);
+                    wall.el.classList.add('wall')
+                    this.walls.push(wall)
+                } else if (tag === 0) {
+                    this.space.push(new Cell(index2 * SIZE, index1 * SIZE, tag))
                 }
             })
         })
@@ -84,8 +92,8 @@ class Game {
 
     render() {
         //分数
-        $('.score').innerText=this.score;
-        $('.level').innerText=this.level;
+        $('.score').innerText = this.score;
+        $('.level').innerText = this.level;
         //玩家移动和方向旋转
         switch (this.player.toward) {
             case "up":
@@ -113,7 +121,7 @@ class Game {
                 }
                 break;
         }
-        this.enemy.forEach(e=>{
+        this.enemy.forEach(e => {
             switch (e.toward) {
                 case "up":
                     e.el.style.rotate = "0deg";
@@ -186,54 +194,70 @@ class Game {
             })
         })
         //击中敌人
-        this.enemy.forEach(enemy =>{
-            this.player.bullet.forEach(bullet=>{
-                if(this.isCollision(enemy,bullet)){
+        this.enemy.forEach(enemy => {
+            this.player.bullet.forEach(bullet => {
+                if (this.isCollision(enemy, bullet)) {
                     bullet.el.remove();
                     this.player.bullet.splice(this.player.bullet.indexOf(bullet), 1)
                     enemy.el.remove();
                     this.enemy.splice(this.enemy.indexOf(enemy), 1)
-                    this.score+=10;
+                    this.score += 10;
                 }
             })
         })
-        if(this.enemy.length===0){
-            if(this.level===3){//获胜
+        if (this.enemy.length === 0) {
+            if (this.level === 1) {//获胜
                 $('.win-score').innerText = this.score
                 this.clearWorld();
                 console.log('获胜')
-                $('.winText').style.display='unset'
+                $('.winText').style.display = 'unset'
                 $('.score').style.display = 'none'
-                $('.level-text').style.display='none'
-            }else{
+                $('.level-text').style.display = 'none'
+            } else {
                 this.level++;
                 this.startLevel(this.level)
             }
         }
+        //监控格子是否为空
+        this.space.forEach(space=>{
+            if(this.isCollision(space,this.player)){
+                space.tag = 3;
+            }else {
+                space.tag = 0;
+            }
+        })
     }
-    clearWorld(){
+
+    clearWorld() {
         clearInterval(this.interval)
-        window.onkeydown=null;
-        window.onkeyup=null;
-        console.log('over')
-        this.player.bullet.forEach(e=>{
-            console.log(e)
+        window.onkeydown = null;
+        window.onkeyup = null;
+        console.log('World Clear')
+        this.player.bullet.forEach(e => {
             e.el.remove();
         })
         this.player.el.remove()
-        this.enemy.forEach(e=>{
+        this.enemy.forEach(e => {
             e.el.remove();
         })
-        this.walls.forEach(e=>{
+        this.walls.forEach(e => {
+            e.el.remove();
+        })
+        this.space.forEach(e=>{
             e.el.remove();
         })
     }
+
     createEnemy(count) {
         for (let i = 0; i < count; i++) {
-            let x = getRandomNum(20, this.width - 20)
-            let y = getRandomNum(20, this.height - 20)
-            let toward =direction[getRandomNum(0,direction.length-1)]
-            this.enemy.push(new Tank(x, y, TANK_SIZE, TANK_SIZE, 'red', 'enemy',toward))
+            let cell = this.space.filter(e=>e.tag!==3)[getRandomNum(0,this.space.length-1)]
+            cell.tag = 3;
+            let x = cell.x;
+            let y = cell.y;
+
+            let toward = direction[getRandomNum(0, direction.length - 1)]
+            let enemy = new Tank(x, y, TANK_SIZE, TANK_SIZE, 'red', 'enemy', toward)
+            this.enemy.push(enemy)
         }
     }
 
@@ -261,7 +285,7 @@ class Game {
             this.createEnemy(3);
         } else if (this.level === 2) {
             this.createEnemy(5)
-        } else if(this.level === 3) {
+        } else if (this.level === 3) {
             this.createEnemy(7);
         }
     }
@@ -269,7 +293,7 @@ class Game {
     start() {
         this.makeMap()
         this.startLevel(1)
-        this.player = new Tank(300, 200, TANK_SIZE, TANK_SIZE, 'green', 'player','up')
+        this.player = new Tank(300, 200, TANK_SIZE, TANK_SIZE, 'green', 'player', 'up')
         window.onkeydown = e => {
             switch (e.key) {
                 case "ArrowUp":
@@ -331,7 +355,7 @@ class Cell {
         this.height = SIZE;
         this.tag = tag;
         this.el = document.createElement('div');
-        this.el.classList.add('wall')
+        this.el.style.position = "absolute"
         this.el.style.width = SIZE + 'px'
         this.el.style.height = SIZE + 'px'
         this.el.style.left = x + 'px'
@@ -357,7 +381,7 @@ class Bullet {
 }
 
 class Tank {
-    constructor(x, y, width, height, color, className,toward) {
+    constructor(x, y, width, height, color, className, toward) {
         this.bullet = []
         this.move = false;
         this.x = x

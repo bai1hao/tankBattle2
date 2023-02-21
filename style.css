@@ -62,7 +62,6 @@ button {
     color:darkslategrey;
 }
 .wall {
-    position:absolute;
     border: 2px solid rosybrown;
     background-color: brown;
 }
